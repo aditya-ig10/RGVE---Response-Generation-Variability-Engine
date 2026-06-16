@@ -2,12 +2,6 @@ from pydantic import BaseModel
 from .parameter_tensor import ParameterTensor
 
 
-class Response(BaseModel):
-    text: str
-    parameters: ParameterTensor
-    model: str
-
-
 class ResponseResult(BaseModel):
     text: str
     log_prob: float
@@ -24,9 +18,25 @@ class PathResult(BaseModel):
     entropy_profile: list[float]
 
 
+class ScoredResponse(BaseModel):
+    response: ResponseResult
+    quality: float
+    diversity: float
+    uncertainty: float
+
+
+class ClusterResult(BaseModel):
+    cluster_id: int
+    member_indices: list[int]
+    size: int
+
+
 class VariantBundle(BaseModel):
-    prompt: str
-    variants: list[Response]
+    primary: ScoredResponse
+    alternatives: list[ScoredResponse]
+    semantic_clusters: list[ClusterResult]
+    inter_cluster_distance: float
+    umap_coords: list[dict]
 
 
 class PossibilityMap(BaseModel):
@@ -37,9 +47,3 @@ class PossibilityMap(BaseModel):
     coverage_ratio: float
     entropy_profile: list[float]
     total_nodes_expanded: int
-
-
-class Cluster(BaseModel):
-    label: str
-    representative: Response
-    members: list[Response]

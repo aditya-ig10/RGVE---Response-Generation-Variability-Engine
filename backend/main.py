@@ -1,5 +1,8 @@
+import json
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from models.parameter_tensor import ParameterTensor
@@ -64,3 +67,30 @@ async def explore(body: ExploreRequest):
 
     result = explore_possibility_space(body.prompt, body.budget, body.top_p, body.max_branch, body.max_depth)
     return result
+
+
+class VariantsRequest(BaseModel):
+    prompt: str
+
+
+@app.post("/api/variants")
+async def variants(body: VariantsRequest):
+    from engine.clusterer import PARAMETER_MANIFEST, LABELS, build_variant_bundle
+    from engine.generator import generate_response
+
+    def event_stream():
+        responses = []
+        for i, config in enumerate(PARAMETER_MANIFEST):
+            result = generate_response(body.prompt, config)
+            responses.append(result)
+            event_data = json.dumps({
+                "index": i,
+                "label": LABELS[i],
+                "text": result.text,
+            })
+            yield f"event: variant\ndata: {event_data}\n\n"
+
+        bundle = build_variant_bundle(body.prompt, responses)
+        yield f"event: complete\ndata: {json.dumps(bundle.model_dump(mode='json'))}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

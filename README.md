@@ -1,4 +1,4 @@
-# RGVE — Response Generation Variation Explorer
+# RGVE — Response Generation Variation Engine
 
 Explore the possibility space of LLM outputs by sampling across parameter configurations and semantically clustering the results.
 

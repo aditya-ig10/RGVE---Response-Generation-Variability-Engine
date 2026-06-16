@@ -48,3 +48,19 @@ async def generate(body: GenerateRequest):
 
     result = generate_response(body.prompt, body.theta)
     return result
+
+
+class ExploreRequest(BaseModel):
+    prompt: str
+    budget: int = 100
+    top_p: float = 0.95
+    max_branch: int = 10
+    max_depth: int = 15
+
+
+@app.post("/api/explore")
+async def explore(body: ExploreRequest):
+    from engine.explorer import explore_possibility_space
+
+    result = explore_possibility_space(body.prompt, body.budget, body.top_p, body.max_branch, body.max_depth)
+    return result

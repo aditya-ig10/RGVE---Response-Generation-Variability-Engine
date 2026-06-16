@@ -17,6 +17,13 @@ class ResponseResult(BaseModel):
     parameter_config: ParameterTensor
 
 
+class PathResult(BaseModel):
+    token_sequence: list[int]
+    text: str
+    log_prob: float
+    entropy_profile: list[float]
+
+
 class VariantBundle(BaseModel):
     prompt: str
     variants: list[Response]
@@ -24,7 +31,12 @@ class VariantBundle(BaseModel):
 
 class PossibilityMap(BaseModel):
     prompt: str
-    clusters: list[Cluster]
+    top_paths: list[PathResult]
+    divergent_paths: list[PathResult]
+    discarded_paths: list[PathResult]
+    coverage_ratio: float
+    entropy_profile: list[float]
+    total_nodes_expanded: int
 
 
 class Cluster(BaseModel):

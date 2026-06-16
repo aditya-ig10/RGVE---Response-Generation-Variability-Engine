@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+llama-cpp-python
+sentence-transformers
+scikit-learn
+numpy
+umap-learn
+pydantic

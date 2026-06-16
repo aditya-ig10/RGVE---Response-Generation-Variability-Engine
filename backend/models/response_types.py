@@ -8,6 +8,15 @@ class Response(BaseModel):
     model: str
 
 
+class ResponseResult(BaseModel):
+    text: str
+    log_prob: float
+    perplexity: float
+    mean_entropy: float
+    token_count: int
+    parameter_config: ParameterTensor
+
+
 class VariantBundle(BaseModel):
     prompt: str
     variants: list[Response]

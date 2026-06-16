@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from models.parameter_tensor import ParameterTensor
 
 app = FastAPI(title="RGVE Backend", version="0.1.0")
 
@@ -32,3 +35,16 @@ async def model_info():
         "gpu_layers": n_gpu,
         "metal_active": sys.platform == "darwin" and n_gpu > 0,
     }
+
+
+class GenerateRequest(BaseModel):
+    prompt: str
+    theta: ParameterTensor
+
+
+@app.post("/api/generate")
+async def generate(body: GenerateRequest):
+    from engine.generator import generate_response
+
+    result = generate_response(body.prompt, body.theta)
+    return result

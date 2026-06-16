@@ -22,6 +22,6 @@ def get_model() -> Llama:
         model_path=model_path,
         n_gpu_layers=-1,
         n_ctx=4096,
-        logits_all=False,
+        logits_all=True,
     )
     return _model

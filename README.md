@@ -81,7 +81,7 @@ curl http://localhost:8000/api/model/info
 
 ## Model
 
-Tested with **TinyLlama 1.1B Chat v1.0** (Q4_K_M, 636 MB) on Apple M1 / 8 GB.
+Tested with **TinyLlama 1.1B Chat v1.0** (Q4_K_M, 636 MB) on Apple M1 Pro / 16 GB.
 
 | Metric | Value |
 |--------|-------|

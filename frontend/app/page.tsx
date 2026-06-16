@@ -26,6 +26,7 @@ const DEFAULT_THETA: ThetaParams = {
 };
 
 export default function Home() {
+  const [prompt, setPrompt] = useState("");
   const [theta, setTheta] = useState<ThetaParams>(DEFAULT_THETA);
   const [budget, setBudget] = useState(100);
   const [loading, setLoading] = useState<LoadingAction>(null);
@@ -55,7 +56,7 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: "", theta }),
+        body: JSON.stringify({ prompt, theta }),
         signal: ctrl.signal,
       });
       const data: ResponseResult = await res.json();
@@ -66,7 +67,7 @@ export default function Home() {
     } finally {
       if (!ctrl.signal.aborted) setLoading(null);
     }
-  }, [theta, cancel]);
+  }, [prompt, theta, cancel]);
 
   const doVariants = useCallback(async () => {
     cancel();
@@ -79,7 +80,7 @@ export default function Home() {
       const res = await fetch("/api/variants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: "" }),
+        body: JSON.stringify({ prompt }),
         signal: ctrl.signal,
       });
       const reader = res.body!.getReader();
@@ -125,7 +126,7 @@ export default function Home() {
     } finally {
       if (!ctrl.signal.aborted) setLoading(null);
     }
-  }, [cancel]);
+  }, [prompt, cancel]);
 
   const doExplore = useCallback(async () => {
     cancel();
@@ -138,7 +139,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: "",
+          prompt,
           budget,
           top_p: theta.top_p,
           max_branch: 4,
@@ -154,7 +155,7 @@ export default function Home() {
     } finally {
       if (!ctrl.signal.aborted) setLoading(null);
     }
-  }, [budget, theta.top_p, cancel]);
+  }, [prompt, budget, theta.top_p, cancel]);
 
   const handleAction = useCallback(
     (action: string) => {
@@ -169,10 +170,12 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden">
       <div className="w-[30%] min-w-[260px] max-w-[340px] p-5 overflow-y-auto border-r border-border">
         <ParameterPanel
+          prompt={prompt}
           theta={theta}
           budget={budget}
           loading={loading}
           onChange={(patch) => setTheta((t) => ({ ...t, ...patch }))}
+          onPromptChange={setPrompt}
           onBudgetChange={setBudget}
           onAction={handleAction}
         />

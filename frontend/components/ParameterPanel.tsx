@@ -28,19 +28,23 @@ export interface ThetaParams {
 }
 
 interface Props {
+  prompt: string;
   theta: ThetaParams;
   budget: number;
   loading: string | null;
   onChange: (patch: Partial<ThetaParams>) => void;
+  onPromptChange: (v: string) => void;
   onBudgetChange: (v: number) => void;
   onAction: (action: string) => void;
 }
 
 export default function ParameterPanel({
+  prompt,
   theta,
   budget,
   loading,
   onChange,
+  onPromptChange,
   onBudgetChange,
   onAction,
 }: Props) {
@@ -74,6 +78,17 @@ export default function ParameterPanel({
       <p className="text-xs text-gray-500 -mt-4">
         Response Generation Variation Explorer
       </p>
+
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Prompt</label>
+        <textarea
+          value={prompt}
+          onChange={(e) => onPromptChange(e.target.value)}
+          placeholder="Enter your prompt here..."
+          rows={3}
+          className="w-full bg-surface border border-border text-gray-300 rounded px-2 py-1.5 text-sm font-mono outline-none resize-none focus:border-accent/60 placeholder:text-gray-600"
+        />
+      </div>
 
       <div className="flex flex-col gap-4">
         <SliderField

@@ -251,11 +251,11 @@ function ResponseTab({ response }: { response: ResponseResult | null }) {
     return <EmptyState message="Click Generate Single to see a response" />;
   }
   return (
-    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
       <div className="flex gap-3 text-xs text-gray-400">
-        <Badge label="PPL" value={response.perplexity.toFixed(2)} />
-        <Badge label="Entropy" value={response.mean_entropy.toFixed(2)} />
-        <Badge label="Tokens" value={String(response.token_count)} />
+        <Badge label="PPL" value={response.perplexity?.toFixed(2) ?? "—"} />
+        <Badge label="Entropy" value={response.mean_entropy?.toFixed(2) ?? "—"} />
+        <Badge label="Tokens" value={String(response.token_count ?? "—")} />
       </div>
       <div className="bg-surface border border-border rounded p-4 whitespace-pre-wrap text-sm leading-relaxed">
         {response.text || <span className="text-gray-500 italic">empty</span>}
@@ -307,19 +307,19 @@ function VariantsTab({
                 <span>
                   Quality:{" "}
                   <span className="text-accent">
-                    {score.quality.toFixed(2)}
+                    {score.quality?.toFixed(2) ?? "—"}
                   </span>
                 </span>
                 <span>
                   Diversity:{" "}
                   <span className="text-blue-400">
-                    {score.diversity.toFixed(3)}
+                    {score.diversity?.toFixed(3) ?? "—"}
                   </span>
                 </span>
                 <span>
                   Uncertainty:{" "}
                   <span className="text-yellow-400">
-                    {score.uncertainty.toFixed(2)}
+                    {score.uncertainty?.toFixed(2) ?? "—"}
                   </span>
                 </span>
               </div>
@@ -345,7 +345,7 @@ function PossibilityMapTab({
     x: i * 1.5,
     y: Math.sin(i) * 2,
     cluster_id: 0,
-    config_label: `path ${i + 1} (${p.log_prob.toFixed(2)})`,
+    config_label: `path ${i + 1} (${(p.log_prob ?? 0).toFixed(2)})`,
   }));
 
   return <PossibilityMap coords={coords} />;

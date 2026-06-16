@@ -16,14 +16,14 @@ rgve/
 │       ├── ResponseViewer.tsx
 │       └── PossibilityMap.tsx
 ├── backend/
-│   ├── main.py            # FastAPI app — /health, /api/model/info
+│   ├── main.py            # FastAPI app — /health, /api/model/info, /api/generate, /api/explore
 │   ├── models/
 │   │   ├── parameter_tensor.py   # Pydantic: temperature, top_p, persona, domain, etc.
-│   │   └── response_types.py     # Response, VariantBundle, PossibilityMap schemas
+│   │   └── response_types.py     # ResponseResult, PathResult, PossibilityMap schemas
 │   ├── engine/
-│   │   ├── model_loader.py       # Singleton Llama loader (Metal, 4K ctx)
-│   │   ├── generator.py          # stub
-│   │   ├── explorer.py           # stub
+│   │   ├── model_loader.py       # Singleton Llama loader (Metal, 4K ctx, logits_all)
+│   │   ├── generator.py          # generate_response() with entropy/perplexity
+│   │   ├── explorer.py           # explore_possibility_space() priority-queue tree search
 │   │   └── clusterer.py          # stub
 │   └── requirements.txt
 └── README.md
@@ -35,10 +35,12 @@ rgve/
 |-----------|-------------|
 | FastAPI app skeleton | ✅ `/health`, `/api/model/info` |
 | `ParameterTensor` model | ✅ Pydantic with enums & validation |
-| `Response` / `VariantBundle` schemas | ✅ Pydantic |
-| `model_loader` singleton | ✅ Metal GGUF loader, `RGVE_MODEL_PATH` |
+| `ResponseResult`/`PathResult` schemas | ✅ Pydantic |
+| `model_loader` singleton | ✅ Metal GGUF loader, `RGVE_MODEL_PATH`, `logits_all=True` |
+| `generator.py` | ✅ `generate_response()` with entropy/perplexity, persona prefixes |
+| `explorer.py` | ✅ nucleus-filtered priority-queue tree search with coverage |
 | Next.js scaffold | ✅ 3 placeholder components, Tailwind |
-| Generation / exploration / clustering | ⏳ stubs |
+| `clusterer.py` | ⏳ stub |
 
 ## Getting Started
 
@@ -77,16 +79,36 @@ curl http://localhost:8000/health
 # Model info (requires RGVE_MODEL_PATH)
 curl http://localhost:8000/api/model/info
 # {"model_name":"tinyllama_tinyllama-1.1b-chat-v1.0","context_size":4096,"gpu_layers":2147483647,"metal_active":true}
+
+# Generate single response
+curl -X POST http://localhost:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"What is the capital of France?","theta":{"temperature":0.7,"top_p":0.9,"top_k":40,"persona":"precise","domain":"general","logit_bias":{},"repetition_penalty":1.0}}'
+# {"text":"\n\nAnswer: Paris.","log_prob":...,"perplexity":1.82,"mean_entropy":...,"token_count":6,...}
+
+# Explore possibility space (tree search)
+curl -X POST http://localhost:8000/api/explore \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"Write a short poem about","budget":5,"top_p":0.92,"max_branch":4,"max_depth":6}'
+# {"prompt":"...","top_paths":[...],"coverage_ratio":0.0236,"total_nodes_expanded":180,...}
 ```
 
 ## Model
 
-Tested with **TinyLlama 1.1B Chat v1.0** (Q4_K_M, 636 MB) on Apple M1 Pro / 16 GB.
+Tested with **TinyLlama 1.1B Chat v1.0** (Q4_K_M, 636 MB) on Apple M1.
 
 | Metric | Value |
 |--------|-------|
 | Prompt eval (prefill) | ~46 ms |
 | Generation speed | ~55 tok/s |
 | Latency | 18 ms/token |
+| Explore (budget=3, branch=3, depth=6) | ~2.2 s |
+| Explore (budget=5, branch=4, depth=6) | ~3.0 s |
 
 All 23 layers offloaded to GPU via Metal. Set `RGVE_MODEL_PATH` to switch models.
+
+### Performance Notes
+
+- **First request after server start** takes 10–20 s due to Metal shader compilation (cached thereafter).
+- **Explore speed** is bounded by `budget × max_branch × max_depth × 50 ms` — each tree node requires a full `model.reset() + model.eval()` since the KV cache cannot be shared across branches. Conservative defaults keep responses under 3 s.
+- Models without `logits_all=True` support will not return logprobs, entropy, or explore results.
